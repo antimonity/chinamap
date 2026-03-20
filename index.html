@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国地图 - 省级行政区划学习</title>
+    <!-- 使用 Leaflet 地图库 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #1e3a5f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 1600px;
+            max-width: 100%;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            padding: 25px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 36px;
+            margin: 0 0 20px 0;
+            font-weight: 500;
+            letter-spacing: 2px;
+            border-bottom: 3px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+        .main-content {
+            display: flex;
+            gap: 20px;
+            height: 800px;
+        }
+        .map-area {
+            flex: 4;
+            background: #ffffff;
+            border-radius: 24px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            cursor: default;
+        }
+        #chinaMap {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+        }
+        .info-area {
+            flex: 1.1;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 25px 18px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .info-header {
+            font-size: 24px;
+            color: #2c3e50;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eaeef2;
+            margin-bottom: 20px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        .detail-card {
+            background: #fafafa;
+            border-radius: 20px;
+            padding: 20px 15px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .province-name {
+            font-size: 42px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.3;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        .province-short {
+            font-size: 28px;
+            color: #5d6d7e;
+            background: #f0f3f7;
+            display: inline-block;
+            padding: 6px 25px;
+            border-radius: 60px;
+            margin: 8px auto 12px;
+            border: 1px solid #d0dae6;
+        }
+        .province-capital {
+            font-size: 32px;
+            color: #2980b9;
+            margin: 8px 0 10px;
+            font-weight: 500;
+            background: #ebf5ff;
+            padding: 8px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            border: 1px solid #bdd9f0;
+        }
+        .province-pop {
+            background: #34495e;
+            color: white;
+            padding: 18px 12px;
+            border-radius: 60px;
+            font-size: 22px;
+            border: none;
+            margin: 8px 0;
+        }
+        .pop-number {
+            font-size: 52px;
+            font-weight: 600;
+            display: block;
+            line-height: 1.2;
+        }
+        .province-features {
+            background: #fef5e7;
+            border-radius: 20px;
+            padding: 15px 12px;
+            margin-top: 12px;
+            border: 1px solid #f5d6b3;
+            text-align: left;
+        }
+        .features-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d35400;
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 2px solid #f5d6b3;
+            padding-bottom: 6px;
+        }
+        .feature-item {
+            font-size: 16px;
+            color: #5d4a2e;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px dashed #f0e0cc;
+        }
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+        .feature-icon {
+            font-size: 20px;
+            min-width: 32px;
+        }
+        .feature-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+        .placeholder-card {
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 40px 15px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 32px;
+            border: 2px dashed #ccd5dd;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .placeholder-card small {
+            font-size: 16px;
+            margin-top: 15px;
+            color: #95a5a6;
+            font-weight: 300;
+        }
+        .footer-note {
+            margin-top: 20px;
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 40px;
+            text-align: center;
+            color: #5d6d7e;
+            border: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        @media (max-width: 1000px) {
+            .main-content { flex-direction: column; height: auto; }
+            .map-area { height: 600px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            📚 中国省级行政区划学习
+        </h1>
+        <div class="main-content">
+            <!-- 地图容器 -->
+            <div class="map-area">
+                <div id="chinaMap"></div>
+            </div>
+            <!-- 信息面板 -->
+            <div class="info-area">
+                <div class="info-header">
+                    省份档案
+                </div>
+                <div id="provinceDetail" style="flex:1; display: flex; flex-direction: column;">
+                    <!-- 默认等待点击 -->
+                    <div class="placeholder-card">
+                        👆 点击省份
+                        <small>查看详细信息</small>
+                    </div>
+                </div>
+                <div class="footer-note">
+                    省会城市 · 人口2025年估算(万人) · 特色推荐
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- 34个省份数据 - 含省会城市和特色 ----------
+            const provinceData = {
+                '北京市': { 
+                    name: '北京市', short: '京', capital: '北京市', population: '2184',
+                    features: ['🍲 北京烤鸭', '🏯 故宫博物院', '🏛️ 长城']
+                },
+                '天津市': { 
+                    name: '天津市', short: '津', capital: '天津市', population: '1386',
+                    features: ['🥟 狗不理包子', '🎭 天津相声', '🌊 五大道']
+                },
+                '上海市': { 
+                    name: '上海市', short: '沪', capital: '上海市', population: '2487',
+                    features: ['🍜 生煎包', '🏙️ 外滩', '🏰 迪士尼乐园']
+                },
+                '重庆市': { 
+                    name: '重庆市', short: '渝', capital: '重庆市', population: '3213',
+                    features: ['🍲 重庆火锅', '🚡 长江索道', '🏞️ 武隆天坑']
+                },
+                '河北省': { 
+                    name: '河北省', short: '冀', capital: '石家庄市', population: '7420',
+                    features: ['🍜 驴肉火烧', '⛰️ 承德避暑山庄', '🏯 山海关']
+                },
+                '山西省': { 
+                    name: '山西省', short: '晋', capital: '太原市', population: '3480',
+                    features: ['🥟 刀削面', '⛩️ 平遥古城', '🏯 云冈石窟']
+                },
+                '辽宁省': { 
+                    name: '辽宁省', short: '辽', capital: '沈阳市', population: '4255',
+                    features: ['🦀 海鲜', '🏯 沈阳故宫', '🌊 大连海滨']
+                },
+                '吉林省': { 
+                    name: '吉林省', short: '吉', capital: '长春市', population: '2375',
+                    features: ['🍚 延边美食', '⛷️ 长白山', '🚗 长春一汽']
+                },
+                '黑龙江省': { 
+                    name: '黑龙江省', short: '黑', capital: '哈尔滨市', population: '3125',
+                    features: ['🍖 锅包肉', '❄️ 冰雪大世界', '🌲 大兴安岭']
+                },
+                '江苏省': { 
+                    name: '江苏省', short: '苏', capital: '南京市', population: '8515',
+                    features: ['🍜 盐水鸭', '🏯 苏州园林', '🕊️ 中山陵']
+                },
+                '浙江省': { 
+                    name: '浙江省', short: '浙', capital: '杭州市', population: '6577',
+                    features: ['🐟 西湖醋鱼', '🌊 西湖', '🏯 乌镇']
+                },
+                '安徽省': { 
+                    name: '安徽省', short: '皖', capital: '合肥市', population: '6121',
+                    features: ['🍲 臭鳜鱼', '⛰️ 黄山', '🏘️ 宏村']
+                },
+                '福建省': { 
+                    name: '福建省', short: '闽', capital: '福州市', population: '4188',
+                    features: ['🍡 沙县小吃', '🏯 鼓浪屿', '🌊 武夷山']
+                },
+                '江西省': { 
+                    name: '江西省', short: '赣', capital: '南昌市', population: '4528',
+                    features: ['🍲 瓦罐汤', '⛰️ 庐山', '🎨 景德镇陶瓷']
+                },
+                '山东省': { 
+                    name: '山东省', short: '鲁', capital: '济南市', population: '10163',
+                    features: ['🌯 煎饼卷大葱', '⛰️ 泰山', '🏯 曲阜三孔']
+                },
+                '河南省': { 
+                    name: '河南省', short: '豫', capital: '郑州市', population: '9872',
+                    features: ['🥟 胡辣汤', '🏯 龙门石窟', '🏛️ 少林寺']
+                },
+                '湖北省': { 
+                    name: '湖北省', short: '鄂', capital: '武汉市', population: '5830',
+                    features: ['🍜 热干面', '🌉 黄鹤楼', '🏞️ 神农架']
+                },
+                '湖南省': { 
+                    name: '湖南省', short: '湘', capital: '长沙市', population: '6622',
+                    features: ['🌶️ 辣椒炒肉', '⛰️ 张家界', '🏯 岳麓书院']
+                },
+                '广东省': { 
+                    name: '广东省', short: '粤', capital: '广州市', population: '12660',
+                    features: ['🥟 早茶', '🏙️ 广州塔', '🌊 长隆乐园']
+                },
+                '海南省': { 
+                    name: '海南省', short: '琼', capital: '海口市', population: '1027',
+                    features: ['🥥 椰子鸡', '🏖️ 三亚', '🌴 天涯海角']
+                },
+                '四川省': { 
+                    name: '四川省', short: '川/蜀', capital: '成都市', population: '8372',
+                    features: ['🔥 麻辣火锅', '🐼 大熊猫基地', '⛰️ 九寨沟']
+                },
+                '贵州省': { 
+                    name: '贵州省', short: '贵/黔', capital: '贵阳市', population: '3852',
+                    features: ['🍶 茅台酒', '🌊 黄果树瀑布', '🏘️ 千户苗寨']
+                },
+                '云南省': { 
+                    name: '云南省', short: '云/滇', capital: '昆明市', population: '4720',
+                    features: ['🍜 过桥米线', '🏔️ 玉龙雪山', '🌺 大理古城']
+                },
+                '陕西省': { 
+                    name: '陕西省', short: '陕/秦', capital: '西安市', population: '3956',
+                    features: ['🍜 羊肉泡馍', '🏯 兵马俑', '🏛️ 大雁塔']
+                },
+                '甘肃省': { 
+                    name: '甘肃省', short: '甘/陇', capital: '兰州市', population: '2492',
+                    features: ['🍜 兰州拉面', '🕌 莫高窟', '🏜️ 月牙泉']
+                },
+                '青海省': { 
+                    name: '青海省', short: '青', capital: '西宁市', population: '594',
+                    features: ['🐟 青海湖湟鱼', '🌊 青海湖', '🏔️ 茶卡盐湖']
+                },
+                '台湾省': { 
+                    name: '台湾省', short: '台', capital: '台北市', population: '2356',
+                    features: ['🥤 珍珠奶茶', '🏯 台北故宫', '🗻 阿里山']
+                },
+                '内蒙古自治区': { 
+                    name: '内蒙古自治区', short: '内蒙古', capital: '呼和浩特市', population: '2401',
+                    features: ['🥩 烤全羊', '🌾 呼伦贝尔草原', '🎪 那达慕大会']
+                },
+                '广西壮族自治区': { 
+                    name: '广西壮族自治区', short: '桂', capital: '南宁市', population: '5037',
+                    features: ['🍜 螺蛳粉', '🌊 桂林山水', '🏞️ 阳朔']
+                },
+                '西藏自治区': { 
+                    name: '西藏自治区', short: '藏', capital: '拉萨市', population: '364',
+                    features: ['🍵 酥油茶', '🏯 布达拉宫', '⛰️ 珠穆朗玛峰']
+                },
+                '宁夏回族自治区': { 
+                    name: '宁夏回族自治区', short: '宁', capital: '银川市', population: '725',
+                    features: ['🍜 手抓羊肉', '🏜️ 沙湖', '🌾 西夏王陵']
+                },
+                '新疆维吾尔自治区': { 
+                    name: '新疆维吾尔自治区', short: '新', capital: '乌鲁木齐市', population: '2589',
+                    features: ['🍇 烤羊肉串', '🏔️ 天山', '🌾 喀纳斯湖']
+                },
+                '香港特别行政区': { 
+                    name: '香港特别行政区', short: '港', capital: '香港', population: '741',
+                    features: ['🥟 港式茶餐厅', '🏙️ 维多利亚港', '🎡 迪士尼乐园']
+                },
+                '澳门特别行政区': { 
+                    name: '澳门特别行政区', short: '澳', capital: '澳门', population: '68',
+                    features: ['🥧 葡式蛋挞', '🏯 大三巴牌坊', '🎰 威尼斯人']
+                }
+            };
+
+            // ---------- 初始化地图 (禁用所有交互) ----------
+            const map = L.map('chinaMap', {
+                center: [35.0, 108.0],
+                zoom: 5,
+                zoomControl: false,
+                attributionControl: false,
+                fadeAnimation: false,
+                dragging: false,
+                touchZoom: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                inertia: false
+            });
+
+            // 更新信息面板
+            function updateInfo(provinceName) {
+                const detailDiv = document.getElementById('provinceDetail');
+                if (!provinceName) {
+                    detailDiv.innerHTML = `
+                        <div class="placeholder-card">
+                            👆 点击省份
+                            <small>查看详细信息</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const info = provinceData[provinceName];
+                
+                if (info) {
+                    let featuresHtml = '';
+                    if (info.features && info.features.length > 0) {
+                        featuresHtml = `
+                            <div class="province-features">
+                                <div class="features-title">✨ 特色推荐</div>
+                                ${info.features.map(feature => `
+                                    <div class="feature-item">
+                                        <div class="feature-icon">${feature.charAt(0)}</div>
+                                        <div class="feature-text">${feature}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    detailDiv.innerHTML = `
+                        <div class="detail-card">
+                            <div class="province-name">${info.name}</div>
+                            <div class="province-short">简称 ${info.short}</div>
+                            <div class="province-capital">🏛️ ${info.capital}</div>
+                            <div class="province-pop">
+                                <span class="pop-number">${info.population}</span>
+                                <span>万人</span>
+                            </div>
+                            ${featuresHtml}
+                        </div>
+                    `;
+                } else {
+                    detailDiv.innerHTML = `
+                        <div class="placeholder-card">
+                            🗺️ ${provinceName}
+                            <small>数据整理中</small>
+                        </div>
+                    `;
+                }
+            }
+
+            // 加载中国省份边界数据
+            const geoJsonUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+
+            fetch(geoJsonUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('网络错误');
+                    return response.json();
+                })
+                .then(data => {
+                    const provinceLayer = L.geoJSON(data, {
+                        style: {
+                            color: '#909090',
+                            weight: 1.5,
+                            fillColor: '#ffffff',
+                            fillOpacity: 1,
+                            opacity: 0.9
+                        },
+                        onEachFeature: (feature, layer) => {
+                            const provinceName = feature.properties.name;
+                            
+                            if (provinceName) {
+                                layer.on('click', () => {
+                                    updateInfo(provinceName);
+                                });
+
+                                layer.on('mouseover', function() {
+                                    this.setStyle({
+                                        weight: 3.0,
+                                        color: '#333333',
+                                        fillColor: '#ffffff',
+                                        fillOpacity: 1
+                                    });
+                                });
+                                layer.on('mouseout', function() {
+                                    this.setStyle({
+                                        color: '#909090',
+                                        weight: 1.5,
+                                        fillColor: '#ffffff',
+                                        fillOpacity: 1
+                                    });
+                                });
+                            }
+                        }
+                    }).addTo(map);
+
+                    if (provinceLayer) {
+                        const bounds = provinceLayer.getBounds();
+                        if (bounds.isValid()) {
+                            map.fitBounds(bounds, { 
+                                padding: [5, 5],
+                                animate: false,
+                                duration: 0
+                            });
+                            const currentZoom = map.getZoom();
+                            map.setZoom(currentZoom - 0.3);
+                        }
+                    }
+
+                    setTimeout(() => {
+                        updateInfo('北京市');
+                    }, 300);
+                })
+                .catch(error => {
+                    console.error('地图加载失败:', error);
+                    document.getElementById('provinceDetail').innerHTML = `
+                        <div class="placeholder-card">
+                            ❌ 加载失败
+                            <small>请刷新页面重试</small>
+                        </div>
+                    `;
+                });
+
+            window.addEventListener('resize', () => {
+                map.invalidateSize({animate: false});
+            });
+
+        })();
+    </script>
+</body>
+</html>
