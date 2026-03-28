@@ -449,9 +449,9 @@
             }
 
             // 加载中国省份边界数据
-            const geoJsonUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+        
 
-            fetch(geoJsonUrl)
+            fetch('/chinamap/china.json')
                 .then(response => {
                     if (!response.ok) throw new Error('网络错误');
                     return response.json();
